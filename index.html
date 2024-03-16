@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>優先順位決定アプリ</title>
+</head>
+<body>
+    <h1>優先順位決定アプリ</h1>
+    
+    <form id="addOptionForm">
+        <label for="option">選択肢を追加：</label>
+        <input type="text" id="option" name="option">
+        <button type="button" onclick="addOption()">追加</button>
+    </form>
+    
+    <ul id="optionsList"></ul>
+
+    <button type="button" onclick="startComparison()">比較開始</button>
+    <br>
+    <br>
+
+    <div id="comparisonContainer" style="display: none;">
+        <p>比較中：</p>
+        <p id="comparisonText"></p>
+        <button type="button" onclick="declareWinner(0)">一番目の選択肢が勝ち</button>
+        <button type="button" onclick="declareWinner(1)">二番目の選択肢が勝ち</button>
+    </div>
+
+    <h2>優先順位：</h2>
+    <ol id="priorityOrder"></ol>
+
+    <script>
+        var options = [];
+        var comparisonPairs = [];
+        var comparisonIndex = 0;
+        var points = {};
+
+        function addOption() {
+            var optionInput = document.getElementById("option");
+            var option = optionInput.value.trim();
+            if (option !== "") {
+                options.push(option);
+                points[option] = 0; // 選択肢の初期ポイントを設定
+                optionInput.value = "";
+                renderOptions();
+            }
+        }
+
+        function renderOptions() {
+            var optionsList = document.getElementById("optionsList");
+            optionsList.innerHTML = "";
+            options.forEach(function(option, index) {
+                var listItem = document.createElement("li");
+                listItem.textContent = option + " (" + points[option] + " ポイント)";
+                var deleteButton = document.createElement("button");
+                deleteButton.textContent = "×";
+                deleteButton.setAttribute("onclick", "deleteOption(" + index + ")");
+                listItem.appendChild(deleteButton);
+                optionsList.appendChild(listItem);
+            });
+        }
+
+        function deleteOption(index) {
+            var removedOption = options.splice(index, 1)[0];
+            delete points[removedOption]; // ポイントも削除
+            renderOptions();
+        }
+
+        function startComparison() {
+            if (options.length < 2) {
+                alert("比較するには少なくとも2つの選択肢が必要です。");
+                return;
+            }
+
+            // すべての組み合わせを生成
+            for (var i = 0; i < options.length - 1; i++) {
+                for (var j = i + 1; j < options.length; j++) {
+                    comparisonPairs.push([options[i], options[j]]);
+                }
+            }
+
+            // 比較を開始
+            compareOptions();
+        }
+
+        function compareOptions() {
+            if (comparisonIndex >= comparisonPairs.length) {
+                showPriorityOrder();
+                return;
+            }
+
+            var pair = comparisonPairs[comparisonIndex];
+            var comparisonContainer = document.getElementById("comparisonContainer");
+            comparisonContainer.style.display = "block";
+
+            var comparisonText = document.getElementById("comparisonText");
+            comparisonText.textContent = pair.join(" vs ");
+        }
+
+        function declareWinner(winnerIndex) {
+            var winner = comparisonPairs[comparisonIndex][winnerIndex];
+            var loser = comparisonPairs[comparisonIndex][1 - winnerIndex];
+            points[winner]++; // 勝者のポイントを増やす
+            comparisonIndex++; // 次の比較に進む
+
+            var comparisonContainer = document.getElementById("comparisonContainer");
+            comparisonContainer.style.display = "none";
+
+            compareOptions(); // 次の比較を行う
+        }
+
+        function showPriorityOrder() {
+            // ポイント数で降順ソート
+            var sortedOptions = Object.keys(points).sort(function(a, b) {
+                return points[b] - points[a];
+            });
+
+            var priorityOrder = document.getElementById("priorityOrder");
+            priorityOrder.innerHTML = "";
+            sortedOptions.forEach(function(option) {
+                var listItem = document.createElement("li");
+                listItem.textContent = option + " (" + points[option] + " ポイント)";
+                priorityOrder.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
