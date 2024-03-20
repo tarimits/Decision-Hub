@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>順位付けさん</title>
+    <style>
+        #userCount {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <h1>順位付けさん</h1>
@@ -30,11 +41,15 @@
     <h2>順位：</h2>
     <ol id="priorityOrder"></ol>
 
+    <div id="userCount"></div>
+
     <script>
         var options = [];
         var comparisonPairs = [];
         var comparisonIndex = 0;
         var points = {};
+        var comparisonCount = 0; // 比較された回数をカウント
+        var userCount = 0; // 利用者数をカウント
 
         function addOption() {
             var optionInput = document.getElementById("option");
@@ -68,6 +83,7 @@
         }
 
         function startComparison() {
+            comparisonCount++; // 比較された回数をインクリメント
             if (options.length < 2) {
                 alert("比較するには少なくとも2つの選択肢が必要です。");
                 return;
@@ -124,15 +140,17 @@
                 priorityOrder.appendChild(listItem);
             });
         }
-　　// 訪問者数をカウントする関数
-    function countVisitor() {
-            visitorCount++;
-            var visitorCountElement = document.getElementById("visitorCount");
-            visitorCountElement.textContent = "訪問者数: " + visitorCount;
+
+        // 利用者数をカウントして表示
+        function countUser() {
+            userCount++;
+            document.getElementById("userCount").textContent = "利用者数: " + userCount;
         }
 
-        // ページ読み込み時に訪問者数をカウントする
-        countVisitor();
+        // 画面読み込み時に利用者数をカウントして表示
+        window.onload = function() {
+            countUser();
+        };
     </script>
 </body>
 </html>
