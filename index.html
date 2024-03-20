@@ -124,6 +124,15 @@
                 priorityOrder.appendChild(listItem);
             });
         }
+　　// 訪問者数をカウントする関数
+    function countVisitor() {
+            visitorCount++;
+            var visitorCountElement = document.getElementById("visitorCount");
+            visitorCountElement.textContent = "訪問者数: " + visitorCount;
+        }
+
+        // ページ読み込み時に訪問者数をカウントする
+        countVisitor();
     </script>
 </body>
 </html>
