@@ -3,126 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>順位付けさん</title>
+    <title>優先順位作成アプリ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .choice {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .choice span {
+            margin-right: 10px;
+        }
+        .choice button {
+            margin-left: 10px;
+        }
+        .comparison, .results {
+            display: none;
+            margin-top: 20px;
+        }
+        .comparison button {
+            margin: 0 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>順位付けさん</h1>
-    
-    <form id="addOptionForm">
-        <label for="option">選択肢：</label>
-        <input type="text" id="option" name="option">
-        <button type="button" onclick="addOption()">追加</button>
-    </form>
-    
-    <ul id="optionsList"></ul>
+    <h1>優先順位作成アプリ</h1>
+    <input type="text" id="choiceInput" placeholder="選択肢を入力">
+    <button onclick="addChoice()">追加</button>
 
-    <button type="button" onclick="startComparison()">比較開始</button>
-    <br>
-    <br>
+    <div id="choicesContainer"></div>
 
-    <div id="comparisonContainer" style="display: none;">
-        <p>比較中：</p>
+    <button id="startComparisonButton" onclick="startComparison()">比較を開始</button>
+    <button id="resetButton" onclick="resetResults()">リセット</button>
+
+    <div id="comparisonContainer" class="comparison">
         <p id="comparisonText"></p>
-        <button type="button" onclick="declareWinner(0)">一番目の選択肢が勝ち</button>
-        <button type="button" onclick="declareWinner(1)">二番目の選択肢が勝ち</button>
+        <button id="choice1Button" onclick="recordWinner(0)"></button>
+        <button id="choice2Button" onclick="recordWinner(1)"></button>
     </div>
 
-    <h2>順位：</h2>
-    <ol id="priorityOrder"></ol>
+    <div id="resultsContainer" class="results">
+        <h2>結果</h2>
+        <p id="resultsText"></p>
+    </div>
 
     <script>
-        var options = [];
-        var comparisonPairs = [];
-        var comparisonIndex = 0;
-        var points = {};
+        let choices = [];
+        let scores = {};
+        let comparisons = [];
+        let currentPair = [];
+        let comparisonIndex = 0;
 
-        function addOption() {
-            var optionInput = document.getElementById("option");
-            var option = optionInput.value.trim();
-            if (option !== "") {
-                options.push(option);
-                points[option] = 0; // 選択肢の初期ポイントを設定
-                optionInput.value = "";
-                renderOptions();
+        function addChoice() {
+            const choiceInput = document.getElementById("choiceInput");
+            const choice = choiceInput.value.trim();
+            if (choice) {
+                choices.push(choice);
+                scores[choice] = 0;
+                updateChoicesContainer();
+                choiceInput.value = "";
             }
         }
 
-        function renderOptions() {
-            var optionsList = document.getElementById("optionsList");
-            optionsList.innerHTML = "";
-            options.forEach(function(option, index) {
-                var listItem = document.createElement("li");
-                listItem.textContent = option + " (" + points[option] + " ポイント)";
-                var deleteButton = document.createElement("button");
-                deleteButton.textContent = "×";
-                deleteButton.setAttribute("onclick", "deleteOption(" + index + ")");
-                listItem.appendChild(deleteButton);
-                optionsList.appendChild(listItem);
-            });
+        function removeChoice(index) {
+            const choice = choices.splice(index, 1)[0];
+            delete scores[choice];
+            updateChoicesContainer();
         }
 
-        function deleteOption(index) {
-            var removedOption = options.splice(index, 1)[0];
-            delete points[removedOption]; // ポイントも削除
-            renderOptions();
+        function updateChoicesContainer() {
+            const choicesContainer = document.getElementById("choicesContainer");
+            choicesContainer.innerHTML = "";
+            choices.forEach((choice, index) => {
+                const div = document.createElement("div");
+                div.className = "choice";
+                div.innerHTML = `<span>${choice}</span><button onclick="removeChoice(${index})">削除</button>`;
+                choicesContainer.appendChild(div);
+            });
+            document.getElementById("startComparisonButton").style.display = choices.length > 1 ? "inline-block" : "none";
+            document.getElementById("resetButton").style.display = "none";
+            document.getElementById("resultsContainer").style.display = "none";
+        }
+
+        function generateComparisons() {
+            comparisons = [];
+            for (let i = 0; i < choices.length; i++) {
+                for (let j = i + 1; j < choices.length; j++) {
+                    comparisons.push([choices[i], choices[j]]);
+                }
+            }
+            shuffleArray(comparisons);
         }
 
         function startComparison() {
-            if (options.length < 2) {
-                alert("比較するには少なくとも2つの選択肢が必要です。");
+            if (choices.length < 2) {
+                alert("比較するには少なくとも2つの選択肢が必要です");
                 return;
             }
+            comparisonIndex = 0;
+            generateComparisons();
+            showNextComparison();
+        }
 
-            // すべての組み合わせを生成
-            for (var i = 0; i < options.length - 1; i++) {
-                for (var j = i + 1; j < options.length; j++) {
-                    comparisonPairs.push([options[i], options[j]]);
-                }
+        function showNextComparison() {
+            if (comparisonIndex < comparisons.length) {
+                currentPair = comparisons[comparisonIndex];
+                const comparisonContainer = document.getElementById("comparisonContainer");
+                const comparisonText = document.getElementById("comparisonText");
+                const choice1Button = document.getElementById("choice1Button");
+                const choice2Button = document.getElementById("choice2Button");
+
+                comparisonText.textContent = "どちらが優先されますか？";
+                choice1Button.textContent = currentPair[0];
+                choice2Button.textContent = currentPair[1];
+
+                comparisonContainer.style.display = "block";
+            } else {
+                showResults();
             }
-
-            // 比較を開始
-            compareOptions();
         }
 
-        function compareOptions() {
-            if (comparisonIndex >= comparisonPairs.length) {
-                showPriorityOrder();
-                return;
+        function recordWinner(winnerIndex) {
+            const winner = currentPair[winnerIndex];
+            scores[winner]++;
+            comparisonIndex++;
+            showNextComparison();
+        }
+
+        function showResults() {
+            const resultsContainer = document.getElementById("resultsContainer");
+            const resultsText = document.getElementById("resultsText");
+
+            const sortedChoices = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+            resultsText.innerHTML = sortedChoices.map(choice => `${choice}: ${scores[choice]}ポイント`).join("<br>");
+
+            resultsContainer.style.display = "block";
+            document.getElementById("comparisonContainer").style.display = "none";
+            document.getElementById("resetButton").style.display = "inline-block";
+        }
+
+        function resetResults() {
+            document.getElementById("resultsContainer").style.display = "none";
+            document.getElementById("resetButton").style.display = "none";
+            scores = choices.reduce((acc, choice) => ({ ...acc, [choice]: 0 }), {});
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
-
-            var pair = comparisonPairs[comparisonIndex];
-            var comparisonContainer = document.getElementById("comparisonContainer");
-            comparisonContainer.style.display = "block";
-
-            var comparisonText = document.getElementById("comparisonText");
-            comparisonText.textContent = pair.join(" vs ");
-        }
-
-        function declareWinner(winnerIndex) {
-            var winner = comparisonPairs[comparisonIndex][winnerIndex];
-            var loser = comparisonPairs[comparisonIndex][1 - winnerIndex];
-            points[winner]++; // 勝者のポイントを増やす
-            comparisonIndex++; // 次の比較に進む
-
-            var comparisonContainer = document.getElementById("comparisonContainer");
-            comparisonContainer.style.display = "none";
-
-            compareOptions(); // 次の比較を行う
-        }
-
-        function showPriorityOrder() {
-            // ポイント数で降順ソート
-            var sortedOptions = Object.keys(points).sort(function(a, b) {
-                return points[b] - points[a];
-            });
-
-            var priorityOrder = document.getElementById("priorityOrder");
-            priorityOrder.innerHTML = "";
-            sortedOptions.forEach(function(option) {
-                var listItem = document.createElement("li");
-                listItem.textContent = option + " (" + points[option] + " ポイント)";
-                priorityOrder.appendChild(listItem);
-            });
         }
     </script>
 </body>
