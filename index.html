@@ -28,13 +28,12 @@
             margin: 0 10px;
         }
         @media screen and (max-width: 600px) {
-            .choice span {
-                display: block;
-                margin-bottom: 5px;
+            .choice {
+                flex-direction: column;
+                align-items: stretch;
             }
             .choice button {
-                margin-left: 0;
-                margin-top: 5px;
+                margin-top: 10px;
             }
         }
     </style>
@@ -136,7 +135,7 @@
                 const choice1Button = document.getElementById("choice1Button");
                 const choice2Button = document.getElementById("choice2Button");
 
-                comparisonText.textContent = "どっち？";
+                comparisonText.textContent = "優先するのは？";
                 choice1Button.textContent = currentPair[0];
                 choice2Button.textContent = currentPair[1];
 
